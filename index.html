@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    margin-top: 40px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    width: 450px;
+}
+
+h1 {
+    text-align: center;
+}
+
+input {
+    padding: 8px;
+    margin: 5px 0;
+    width: 48%;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+    .dark {
+    background: #1e1e1e;
+    color: white;
+}
+
+.dark .container {
+    background: #2c2c2c;
+    color: white;
+}
+
+.dark input {
+    background: #444;
+    color: white;
+    border: 1px solid #666;
+}
+
+.dark button {
+    background: #444;
+    color: white;
+}
+    ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+ul li {
+    background: #f1f1f1;
+    padding: 8px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+}
+
+.dark ul li {
+    background: #3a3a3a;
+}
+    .delete-btn {
+    background: red;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.delete-btn:hover {
+    background: darkred;
+}
+</style>
+</head>
+<body>
+  <div class="container">
+  <h1>Smart Expense Tracker</h1>
+    <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
+
+  <input type="text" id="category" placeholder="Category (Food, Travel)">
+  <input type="number" id="amount" placeholder="Amount">
+    <input type="date" id="date">
+  <button onclick="addExpense()">Add Expense</button>
+
+  <h3>Total: ₹<span id="total">0</span></h3>
+    <h3>Daily Total: ₹<span id="dailyTotal">0</span></h3>
+<h3>Monthly Total: ₹<span id="monthlyTotal">0</span></h3>
+
+  <canvas id="myChart" width="400" height="200"></canvas>
+
+    <h3>Expense List</h3>
+<ul id="expenseList"></ul>
+
+  <script>
+    let expenses = [];
+    let total = 0;
+    let myChart;
+
+    function addExpense() {
+      let category = document.getElementById("category").value;
+      let amount = parseInt(document.getElementById("amount").value);
+
+      if (!category || !amount) {
+        alert("Please fill all fields");
+        return;
+      }
+
+     expenses.push({
+    category: category.trim().toLowerCase(),
+    amount: amount,
+    date: date
+});
+      let list = document.getElementById("expenseList");
+
+let li = document.createElement("li");
+
+let span = document.createElement("span");
+span.innerText = category + " - ₹" + amount;
+
+let deleteBtn = document.createElement("button");
+deleteBtn.innerText = "❌";
+deleteBtn.classList.add("delete-btn");
+
+deleteBtn.onclick = function() {
+
+    // expenses array se item remove karo
+    expenses = expenses.filter(function(exp) {
+        return !(exp.category === category.trim().toLowerCase() && exp.amount === amount);
+    });
+
+    total -= amount;
+    document.getElementById("total").innerText = total;
+
+    li.remove();
+    updateChart();
+};
+
+li.appendChild(span);
+li.appendChild(deleteBtn);
+
+list.appendChild(li);
+      total += amount;
+      document.getElementById("category").value = "";
+document.getElementById("amount").value = "";
+
+      document.getElementById("total").innerText = total;
+      if (total > 5000) {
+  alert("⚠ You are exceeding your monthly budget!");
+}
+
+      updateChart();
+    }
+
+    function updateChart() {
+      let categories = {};
+      let today = new Date().toISOString().split("T")[0];
+let dailyTotal = 0;
+let monthlyTotal = 0;
+     expenses.forEach(e => {
+       
+    categories[e.category] = (categories[e.category] || 0) + e.amount;
+
+    if (e.date === today) {
+        dailyTotal += e.amount;
+    }
+
+    if (e.date && e.date.substring(0,7) === today.substring(0,7)) {
+        monthlyTotal += e.amount;
+    }
+
+});
+      document.getElementById("dailyTotal").innerText = dailyTotal;
+document.getElementById("monthlyTotal").innerText = monthlyTotal;
+
+      let labels = Object.keys(categories);
+      let data = Object.values(categories);
+      let chartTotal = data.reduce((a, b) => a + b, 0);
+      console.log(categories);
+      if (myChart) {
+        console.log(categories);
+    myChart.destroy();
+}
+
+      myChart = new Chart(document.getElementById("myChart"), {
+    type: 'pie',
+    data: {
+        labels: labels,
+        datasets: [{
+            data: data
+        }]
+    },
+    options: {
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let totalSum = context.dataset.data.reduce((a, b) => a + b, 0);
+                        let value = context.raw;
+                        let percentage = ((value / totalSum) * 100).toFixed(1);
+                        return context.label + ": ₹" + value + " (" + percentage + "%)";
+                    }
+                }
+            }
+        }
+    }
+});
+   if (categories["food"] && categories["food"] > 2000) {
+    alert("💡 You are spending heavily on Food. Try reducing it.");
+}
+    }
+    function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+}
+  </script>
+    </div>
+</body>
+</html>
